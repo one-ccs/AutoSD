@@ -3,7 +3,6 @@
 #include <time.h>
 #include <windows.h>
 #include <conio.h>
-//#include <string.h>
 
 int main() {
 start:
@@ -68,8 +67,9 @@ start:
            "1、定时--关机\n\n"
            "2、定时--重新启动\n\n"
            "3、定时--注销\n\n"
-           "4、刷新\n\n"
-           "5、退出\n\n"
+           "4、清除--计划任务\n\n"
+           "5、刷新\n\n"
+           "6、退出\n\n"
     );
     while(1) {
         int timekeeping = 0;
@@ -134,10 +134,17 @@ start:
                 goto start;
                 break;
             case 4:
+                system("shutdown /a");
+                printf("已成功清除计划任务。\n");
+                system("pause");
                 system("cls");
                 goto start;
                 break;
             case 5:
+                system("cls");
+                goto start;
+                break;
+            case 6:
                 exit(0);
                 break;
             default:
