@@ -1,2 +1,2 @@
-# AutoSD-C
+# AutoSD
 This is a Auto Shutdown application.
