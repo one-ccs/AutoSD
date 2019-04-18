@@ -79,7 +79,7 @@ start:
             case 1:
                 printf("请输入定时时间(s)：\r");
                 scanf("%d", &timekeeping);
-                while(timekeeping) {
+                while(timekeeping > 0) {
                     if(kbhit()) {
                         getch();
                         goto start;
@@ -98,7 +98,7 @@ start:
             case 2:
                 printf("请输入定时时间(s)：\r");
                 scanf("%d", &timekeeping);
-                while(timekeeping) {
+                while(timekeeping > 0) {
                     if(kbhit()) {
                         getch();
                         goto start;
@@ -117,7 +117,7 @@ start:
             case 3:
                 printf("请输入定时时间(s)：\r");
                 scanf("%d", &timekeeping);
-                while(timekeeping) {
+                while(timekeeping > 0) {
                     if(kbhit()) {
                         getch();
                         goto start;
