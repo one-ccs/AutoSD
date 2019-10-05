@@ -7,9 +7,20 @@
 
 from AutoSD_Function import *
 
+global active
+
 def main():
     sys_init()
-    get_choice()
 
-if __name__ == "__main__":
+    active = True
+
+    while active:
+        show_tip()
+        show_time()
+        show_menu()
+        get_choice(get_integer())
+
+    return 0
+
+if __name__ == '__main__':
     main()

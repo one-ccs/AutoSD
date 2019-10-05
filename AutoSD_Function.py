@@ -7,16 +7,29 @@
 
 import os
 import time
-import sys
 import msvcrt
 
+global active
+
 def sys_init():
+    """初始化窗口标题、色彩、大小"""
 
     os.system('title AutoSd by one-ccs')
     os.system('color 0a')
     os.system('mode con: cols=40 lines=26')
 
-def real_time():
+def show_tip():
+    """显示表头"""
+
+    view = "=======================================\n" \
+    + "~                                     ~\n" \
+    + "~           ☢ 自动关机程序 ☢          ~\n" \
+    + "~                                     ~\n" \
+    + "---------------------------------------\n"
+    print(view)
+
+def show_time():
+    """格式化显示当前时间信息"""
 
     real_date = time.strftime('%Y-%m-%d', time.localtime())
     real_week = time.strftime('%w', time.localtime())
@@ -25,26 +38,24 @@ def real_time():
     real_weeks = ('星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六')
     time_display = '     ' + real_date + '  ' + real_weeks[int(real_week)] \
     + '  ' + real_time + '\n\n' + '             今年第 ' + real_day + ' 天\r'
-    return time_display
+    print(time_display)
 
-def tip_display():
-    view = "=======================================\n" \
-    + "~                                     ~\n" \
-    + "~         请选择一个操作并回车        ~\n" \
-    + "~                                     ~\n" \
-    + "---------------------------------------\n"
-    return view
+def show_menu():
+    """显示菜单"""
 
-def menu_display():
     view = "\n1、定时--关机\n\n" \
     + "2、定时--重启\n\n" \
     + "3、定时--注销\n\n" \
     + "4、清除--任务\n\n" \
     + "5、刷新\n\n" \
     + "6、退出\n"
-    return view
+    print(view)
 
-def enter_num(info = "请输入数字："):
+def get_integer(info = "请输入数字："):
+    """获取整型数据
+
+    info-提示信息"""
+
     num = 'a'
 
     while (not num.isdigit()):
@@ -52,13 +63,14 @@ def enter_num(info = "请输入数字："):
 
     return num
 
-def rev_nums(a):
-    a = list(range(int(a), -1, -1))
-    return a
-
 def my_shutdown(command):
+    """执行关机指令
+
+       command(0-关机;1-重启;2-注销;3-清除计划;other-再次输入)"""
+
     if command != 3:
-        time_down = enter_num("请输入定时时间(s):")
+
+        time_down = get_integer("请输入定时时间(s):")
 
     if command == 0:
         cmd = '关机'
@@ -93,44 +105,46 @@ def my_shutdown(command):
             a += 1
         time.sleep(1)
 
-def get_choice():
-    while 1:
-        print(tip_display())
-        print(real_time())
-        print(menu_display())
+def get_choice(choose):
+    """根据获取的 choose 执行相应指令"""
 
-        choose = enter_num()
+    if int(choose) == 1:
+        my_shutdown(0)
+        input("\n按回车键继续...")
+        os.system("cls")
+    elif int(choose) == 2:
+        my_shutdown(1)
+        input("\n按回车键继续...")
+        os.system("cls")
+    elif int(choose) == 3:
+        my_shutdown(2)
+        input("\n按回车键继续...")
+        os.system("cls")
+    elif int(choose) == 4:
+        my_shutdown(3)
+        return
+    elif int(choose) == 5:
+        os.system("cls")
+        return
+    elif int(choose) == 6:
+        active = False
+        return
+    else:
+        print("Error!")
+        input("按回车键继续")
+        os.system("cls")
+        return
+    os.system('cls')
 
-        if int(choose) == 1:
-            my_shutdown(0)
-            input("\n按回车键继续...")
-            os.system("cls")
-        elif int(choose) == 2:
-            my_shutdown(1)
-            input("\n按回车键继续...")
-            os.system("cls")
-        elif int(choose) == 3:
-            my_shutdown(2)
-            input("\n按回车键继续...")
-            os.system("cls")
-        elif int(choose) == 4:
-            my_shutdown(3)
-            continue
-        elif int(choose) == 5:
-            os.system("cls")
-            continue
-        elif int(choose) == 6:
-            sys.exit(0)
-        else:
-            print("Error!")
-            input("按回车键继续")
-            os.system("cls")
-            continue
+# ~ def rev_nums(final):
+    # ~ """返回一个从 final 到 0 的整型数组"""
+    # ~ array = list(range(int(final), -1, -1))
+
+    # ~ return array
 
 
-# ~ def main(args):
-    # ~ return 0
+def main():
+    return 0
 
-# ~ if __name__ == '__main__':
-    # ~ import sys
-    # ~ sys.exit(main(sys.argv))
+if __name__ == '__main__':
+    main()
