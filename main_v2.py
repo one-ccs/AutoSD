@@ -7,13 +7,12 @@
 
 from AutoSD_Function import *
 
-global active
+active = True
 
 def main():
+    global active
+
     sys_init()
-
-    active = True
-
     while active:
         show_tip()
         show_time()
