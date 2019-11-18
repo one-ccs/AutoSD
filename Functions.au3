@@ -4,29 +4,29 @@ Func Command(Const $Task)
 	Switch $Task
 		; 注销|关机|重启|强制关机|关闭电源|待机|休眠
 		Case '注销'
-;~ 			Shutdown(0)
-			MsgBox(0,'','注销')
+			Shutdown(0)
+;~ 			MsgBox(0,'','注销')
 		Case '关机'
-;~ 			Shutdown(1)
-			MsgBox(0,'','关机')
+			Shutdown(1)
+;~ 			MsgBox(0,'','关机')
 		Case '重启'
-;~ 			Shutdown(2)
-			MsgBox(0,'','重启')
+			Shutdown(2)
+;~ 			MsgBox(0,'','重启')
 		Case '强制关机'
-;~ 			Shutdown(0)
-			MsgBox(0,'','强制关机')
+			Shutdown(0)
+;~ 			MsgBox(0,'','强制关机')
 		Case '关闭电源'
-;~ 			Shutdown(0)
-			MsgBox(0,'','关闭电源')
+			Shutdown(0)
+;~ 			MsgBox(0,'','关闭电源')
 		Case '待机'
-;~ 			Shutdown(0)
-			MsgBox(0,'','待机')
+			Shutdown(0)
+;~ 			MsgBox(0,'','待机')
 		Case '休眠'
-;~ 			Shutdown(0)
-			MsgBox(0,'','休眠')
+			Shutdown(0)
+;~ 			MsgBox(0,'','休眠')
 		Case Else
-;~ 			Shutdown(1)
-			MsgBox(0,'','关机')
+			Shutdown(1)
+;~ 			MsgBox(0,'','关机')
 	EndSwitch
 EndFunc
 
@@ -88,7 +88,7 @@ Func EndDate($second)
 		EndIf
 	WEnd
 	If $sec < 10 Then $sec = '0' & $sec
-	If $min < 10 Then $min = '0' & $sec
+	If $min < 10 Then $min = '0' & $min
 	If $hour < 10 Then $hour = '0' & $hour
 	If $day < 10 Then $dat = '0' & $day
 	If $mon < 10 Then $mon = '0' & $mon
@@ -97,6 +97,16 @@ Func EndDate($second)
 	If $year >= 100 And $year < 1000 Then $year = '0' & $year
 	
 	Return $year & '-' & $mon & '-' & $day & '  ' & $hour & ':' & $min & ':' & $sec
+EndFunc
+
+Func Bool(Const $str)
+	If StringLower(StringStripWS($str, 3)) = 'false' Then
+		Return False
+	ElseIf StringLower(StringStripWS($str, 3)) = 'true' Then
+		Return True
+	Else
+		Return -1
+	EndIf
 EndFunc
 
 Func Time()

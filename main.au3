@@ -1,13 +1,13 @@
 #Region ;**** 参数创建于 ACNWrapper_GUI ****
-#PRE_icon=C:\WINDOWS\System32\SHELL32.dll|-168
+#PRE_icon=AutoSD.dll|-3
 #PRE_Outfile=AutoSD.exe
 #PRE_Compression=4
-#PRE_UseX64=n
 #PRE_Res_Description=自动关机程序。
 #PRE_Res_Fileversion=1.0.0.1
 #PRE_Res_LegalCopyright=AutoAD
 #PRE_Res_requestedExecutionLevel=None
 #EndRegion ;**** 参数创建于 ACNWrapper_GUI ****
+
 
 #include <ButtonConstants.au3>
 #include <ComboConstants.au3>
@@ -20,7 +20,8 @@
 #include "Functions.au3"
 
 Opt("GUIOnEventMode", 1)   			  ; 设置为 事件驱动 模式
-
+;~ #NoTrayIcon			              ; 脚本执行时不显示托盘图标
+Opt("TrayMenuMode", 3)
 #Region ### START Koda GUI section ###
 Local $config_path = @MyDocumentsDir & '\AutoSD'          ; 程序文档文件路径
 Local $file_config = $config_path & '\config.ini'	       ; 配置文件路径
@@ -47,9 +48,9 @@ GUICtrlCreateGroup("开机启动项", 24, 20, 150, 76)
 $Checkbox_launch = GUICtrlCreateCheckbox("随计算机启动", 44, 44, 97, 17)
 $Checkbox_launch_min = GUICtrlCreateCheckbox("启动后最小化", 59, 68, 97, 17)
 GUICtrlCreateGroup("关闭主面板", 24, 110, 150, 100)
-$Checkbox_exit = GUICtrlCreateCheckbox("退出 AutoSD", 44, 134, 97, 17)
-$Checkbox_min = GUICtrlCreateCheckbox("最小化到系统托盘", 44, 158, 120, 17)
-$Checkbox_nobox = GUICtrlCreateCheckbox("不显示确认提示框", 44, 182, 120, 17)
+$Radio_exit = GUICtrlCreateRadio("退出 AutoSD", 44, 134, 100, 17)
+$Checkbox_nobox = GUICtrlCreateCheckbox("不显示提示框", 59, 158, 100, 17)
+$Radio_min = GUICtrlCreateRadio("最小化到系统托盘", 44, 182, 120, 17)
 $Checkbox_launch_startCountdown = GUICtrlCreateCheckbox("启动时立即执行倒计时", 30, 220, 146, 17)
 $Button_Setting_ok = GUICtrlCreateButton("确定", 200, 112, 75, 25)
 $Button_Setting_apply = GUICtrlCreateButton("应用", 200, 152, 75, 25)
@@ -71,9 +72,18 @@ $Button_Start = GUICtrlCreateButton("开始", 312, 99, 60, 30)
 $Button_Reset = GUICtrlCreateButton("重置", 372, 99, 60, 30)
 $Icon_Setting = GUICtrlCreateIcon($config_path & '\AutoSD.dll', -1, 438, 98, 32, 32)
 $Label_Countdown = GUICtrlCreateLabel($Timer, 125, 152, 250, 80, $SS_CENTER)
-$Label_EndDate = GUICtrlCreateLabel("0000-00-00  00:00:00", 168, 238, 164, 20, $SS_CENTER)
+$Label_EndDate = GUICtrlCreateLabel("0000-00-00  00:00:00", 167, 238, 166, 20, $SS_CENTER)
 $Progress = GUICtrlCreateProgress(135, 262, 230, 17, $PBS_SMOOTH)
 $StatusBar = _GUICtrlStatusBar_Create($root)
+TraySetIcon("", -1)
+TraySetClick("9")
+$MenuItem_Openview = TrayCreateItem("打开主面板")
+$MenuItem_Start = TrayCreateItem("开始")
+$MenuItem_Pause = TrayCreateItem("暂停")
+$MenuItem_Setting = TrayCreateItem("设置")
+$MenuItem_About = TrayCreateItem("关于")
+$MenuItem_Exit = TrayCreateItem("退出 AutoSD")
+
 
 ; 设置对象事件
 GUISetOnEvent($GUI_EVENT_CLOSE, "Root_Close", $root)
@@ -81,17 +91,18 @@ GUISetOnEvent($GUI_EVENT_CLOSE, "Setting_Close", $setting)
 GUICtrlSetOnEvent($Combo_Task, "Combo_Task_Change")
 GUICtrlSetOnEvent($Button_Start, "Button_Start_Click")
 GUICtrlSetOnEvent($Button_Reset, "Button_Reset_Click")
-GUICtrlSetOnEvent($Checkbox_launch, "Checkbox_Setting")
-GUICtrlSetOnEvent($Checkbox_launch_min, "Checkbox_Setting")
-GUICtrlSetOnEvent($Checkbox_exit, "Checkbox_Setting")
-GUICtrlSetOnEvent($Checkbox_min, "Checkbox_Setting")
-GUICtrlSetOnEvent($Checkbox_nobox, "Checkbox_Setting")
-GUICtrlSetOnEvent($Checkbox_launch_startCountdown, "Checkbox_Setting")
+GUICtrlSetOnEvent($Checkbox_launch, "Setting_Change")
+GUICtrlSetOnEvent($Checkbox_launch_min, "Setting_Change")
+GUICtrlSetOnEvent($Radio_exit, "Setting_Change")
+GUICtrlSetOnEvent($Checkbox_nobox, "Setting_Change")
+GUICtrlSetOnEvent($Radio_min, "Setting_Change")
+GUICtrlSetOnEvent($Checkbox_launch_startCountdown, "Setting_Change")
 GUICtrlSetOnEvent($Button_Setting_ok, "Button_Setting")
 GUICtrlSetOnEvent($Button_Setting_apply, "Button_Setting")
 GUICtrlSetOnEvent($Button_Setting_cancel, "Button_Setting")
 GUICtrlSetOnEvent($Icon_Setting, "Icon_Setting_Click")
 GUICtrlSetOnEvent($Icon_About, "Icon_About_Click")
+TrayItemSetOnEvent($MenuItem_Exit, "Root_Close")
 
 ; 设置对象属性
 GUISetBkColor(0xC8C8C8, $root)
@@ -153,17 +164,20 @@ Func Root_Init()
 	;;; 程序 初始化 事件
 	If $Task <> '关机' And $Task <> '重启' And $Task <> '注销' Then $Task = '关机'
 	If $Timer < 10 Then $Timer = 1800
+	Setting_Refresh()
+	If Bool($Setting_Values[6][1]) = True Then Button_Start_Click()
 EndFunc
 
 Func Root_Close()
 	; 主窗口 关闭按钮 事件
 	Local $info
-	If $Setting_Values[5][1] = 'False' Then
+	If $Setting_Values[4][1] = 'False' Then
 		$info = MsgBox(33,'提示', '确定要退出吗？'& @CRLF & @CRLF & 'tip：可在设置中禁用该提示。', 3, $root)
 		If $info <> 1 Then Return
 	EndIf
 	IniWrite($file_config, 'Config', 'task', $Task)
 	IniWrite($file_config, 'Config', 'timing', $Timer)
+	
 	Exit(0)
 EndFunc
 
@@ -222,48 +236,59 @@ Func Button_Reset_Click()
 EndFunc
 
 Func Icon_Setting_Click()
-	; 设置按钮 单击 事件
+	;;; 设置按钮 单击 事件
 	GUISetState(@SW_HIDE, $root)
 	GUISetState(@SW_SHOW, $setting)
-	Checkbox_Setting_Refresh()
+	Setting_Refresh()
 EndFunc
 
-Func Checkbox_Setting_Refresh()
-	If $Setting_Values[1][1] = 'True' Then
+Func Setting_Refresh()
+	;;; 设置 刷新
+	; 单选框
+	If Bool($Setting_Values[3][1]) = True Then
+		GUICtrlSetState($Radio_exit, $GUI_CHECKED)
+		GUICtrlSetState($Radio_min, $GUI_UNCHECKED)
+	Else
+		GUICtrlSetState($Radio_exit, $GUI_UNCHECKED)
+		GUICtrlSetState($Radio_min, $GUI_CHECKED)
+	EndIf
+	; 复选框
+	If Bool($Setting_Values[1][1]) = True Then
 		GUICtrlSetState($Checkbox_launch, $GUI_CHECKED)
 	Else
 		GUICtrlSetState($Checkbox_launch, $GUI_UNCHECKED)
+		GUICtrlSetState($Checkbox_launch_min, $GUI_DISABLE)
 	EndIf
-	If $Setting_Values[2][1] = 'True' Then
+	If Bool($Setting_Values[2][1]) = True Then
 		GUICtrlSetState($Checkbox_launch_min, $GUI_CHECKED)
 	Else
 		GUICtrlSetState($Checkbox_launch_min, $GUI_UNCHECKED)
 	EndIf
-	If $Setting_Values[3][1] = 'True' Then
-		GUICtrlSetState($Checkbox_exit, $GUI_CHECKED)
-	Else
-		GUICtrlSetState($Checkbox_exit, $GUI_UNCHECKED)
-	EndIf
-	If $Setting_Values[4][1] = 'True' Then
-		GUICtrlSetState($Checkbox_min, $GUI_CHECKED)
-	Else
-		GUICtrlSetState($Checkbox_min, $GUI_UNCHECKED)
-	EndIf
-	If $Setting_Values[5][1] = 'True' Then
+	If Bool($Setting_Values[4][1]) = True Then
 		GUICtrlSetState($Checkbox_nobox, $GUI_CHECKED)
 	Else
 		GUICtrlSetState($Checkbox_nobox, $GUI_UNCHECKED)
 	EndIf
-	If $Setting_Values[6][1] = 'True' Then
+	If Bool($Setting_Values[6][1]) = True Then
 		GUICtrlSetState($Checkbox_launch_startCountdown, $GUI_CHECKED)
 	Else
 		GUICtrlSetState($Checkbox_launch_startCountdown, $GUI_UNCHECKED)
 	EndIf
 EndFunc
 
-Func Checkbox_Setting()
-	; 设置窗口 复选框 事件
+Func Setting_Change()
+	;;; 设置改变 事件
 	Switch @GUI_CtrlId
+		; 单选框
+		Case $Radio_exit, $Radio_min
+			If GUICtrlRead($Radio_exit) = $GUI_CHECKED Then
+				$Temp_Setting_Values[3][1] = 'True'
+				$Temp_Setting_Values[5][1] = 'False'
+			Else
+				$Temp_Setting_Values[3][1] = 'False'
+				$Temp_Setting_Values[5][1] = 'True'
+			EndIf
+		; 复选框
 		Case $Checkbox_launch
 			If GUICtrlRead($Checkbox_launch) = $GUI_CHECKED Then
 				GUICtrlSetState($Checkbox_launch_min, $GUI_ENABLE)
@@ -278,23 +303,11 @@ Func Checkbox_Setting()
 			Else
 				$Temp_Setting_Values[2][1] = 'False'
 			EndIf
-		Case $Checkbox_exit
-			If GUICtrlRead($Checkbox_exit) = $GUI_CHECKED Then
-				$Temp_Setting_Values[3][1] = 'True'
-			Else
-				$Temp_Setting_Values[3][1] = 'False'
-			EndIf
-		Case $Checkbox_min
-			If GUICtrlRead($Checkbox_min) = $GUI_CHECKED Then
+		Case $Checkbox_nobox
+			If GUICtrlRead($Checkbox_nobox) = $GUI_CHECKED Then
 				$Temp_Setting_Values[4][1] = 'True'
 			Else
 				$Temp_Setting_Values[4][1] = 'False'
-			EndIf
-		Case $Checkbox_nobox
-			If GUICtrlRead($Checkbox_nobox) = $GUI_CHECKED Then
-				$Temp_Setting_Values[5][1] = 'True'
-			Else
-				$Temp_Setting_Values[5][1] = 'False'
 			EndIf
 		Case $Checkbox_launch_startCountdown
 			If GUICtrlRead($Checkbox_launch_startCountdown) = $GUI_CHECKED Then
@@ -310,12 +323,12 @@ Func Button_Setting()
 	Switch @GUI_CtrlId
 		Case $Button_Setting_ok
 			$Setting_Values = $Temp_Setting_Values
-			Checkbox_Setting_Refresh()
+			Setting_Refresh()
 			IniWriteSection($file_config, 'Setting', $Setting_Values)
 			Setting_Close()
 		Case $Button_Setting_apply
 			$Setting_Values = $Temp_Setting_Values
-			Checkbox_Setting_Refresh()
+			Setting_Refresh()
 			IniWriteSection($file_config, 'Setting', $Setting_Values)
 		Case $Button_Setting_cancel
 			Setting_Close()
