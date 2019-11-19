@@ -4,13 +4,16 @@ Func Command(Const $Task)
 	Switch $Task
 		; 注销|关机|重启|强制关机|关闭电源|待机|休眠
 		Case '注销'
-			Shutdown(0)
+			Run(@ComSpec & " /c " & "shutdown /l /f /t 0", "", @SW_HIDE)
+			Exit(0)
 ;~ 			MsgBox(0,'','注销')
 		Case '关机'
-			Shutdown(1)
+			Run(@ComSpec & " /c " & "shutdown /p /f", "", @SW_HIDE)  ; 没有超时或警告
+			Exit(0)
 ;~ 			MsgBox(0,'','关机')
 		Case '重启'
-			Shutdown(2)
+			Run(@ComSpec & " /c " & "shutdown /r /f /t 0", "", @SW_HIDE)
+			Exit(0)
 ;~ 			MsgBox(0,'','重启')
 		Case '强制关机'
 			Shutdown(0)
