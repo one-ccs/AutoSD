@@ -42,29 +42,38 @@ Func Persent(Const $num1,Const $num2)
 	Return $p
 EndFunc
 
+Func day_num($year, $mon)
+	;;; 输入 年份及月份；返回天数
+	Local $leap_year = False
+	Local $max_day = 28
+	If Mod($year, 4) = 0 And Mod($year, 100) <> 0 Or Mod($year, 400) = 0 Then
+		$leap_year = True
+	EndIf
+	
+	Switch $mon
+		Case 1, 3, 5, 7, 8, 10, 12
+			$max_day = 31
+		Case 2
+			If $leap_year Then
+				$max_day = 29
+			Else
+				$max_day = 28
+			EndIf
+		Case 4, 6, 9, 11
+			$max_day = 30
+	EndSwitch
+		
+	Return $max_day
+EndFunc
+
 Func EndDate($second)
 	If $second > 31536000 Then Return -1
 	Local $sec = @SEC, $min = @MIN, $hour = @HOUR
 	Local $day = @MDAY, $mon = @MON, $year = @YEAR
 	Local $leap_year = False
-	Local $max_day = 28
+	Local $max_day = day_num($year, $mon)
 	
-	If Mod($year, 4) = 0 And Mod($year, 100) <> 0 Or Mod($year, 400) = 0 Then
-		$leap_year = True
-	EndIf
 	While $second > 0
-		Switch $mon
-			Case 1, 3, 5, 7, 8, 10, 12
-				$max_day = 31
-			Case 2
-				If $leap_year Then
-					$max_day = 29
-				Else
-					$max_day = 28
-				EndIf
-			Case 4, 6, 9, 11
-				$max_day = 30
-		EndSwitch
 		If $sec < 60 Then
 			$sec += 1
 			$second -= 1
@@ -80,6 +89,7 @@ Func EndDate($second)
 						If $day = $max_day And $mon < 12 Then
 							$day = 1
 							$mon += 1
+							$max_day = day_num($year, $mon)
 							If $mon = 12 And $year < 9999 Then
 								$mon = 1
 								$year += 1
