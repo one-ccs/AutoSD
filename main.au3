@@ -26,7 +26,8 @@ Opt("TrayOnEventMode", 1)			; 启用 托盘 事件驱动 模式
 Opt("TrayMenuMode", 3)			; 取消 托盘 默认菜单
 
 ; 全局变量
-Local $config_path, $file_config, $Setting_Values, $Temp_Setting_Values, $Task, $Timer, $Countdown
+Local $config_path, $file_config, $Startup_Shortcut
+Local $Setting_Values, $Temp_Setting_Values, $Task, $Timer, $Countdown
 Local $Progress_Value = 0, $temp_timer = 0
 Local $Timer_Active = False, $About_Active = False
 ; 全局对象变量
@@ -43,8 +44,9 @@ Local $About
 ; 主函数
 Func Main()
 	#Region ### START Koda GUI section ###
-	$config_path = @MyDocumentsDir & '\AutoSD'          ; 程序文档文件路径
+	$config_path = @MyDocumentsDir & '\AutoSD'          ; 程序文档文件目录
 	$file_config = $config_path & '\config.ini'	       ; 配置文件路径
+	$Startup_Shortcut = @StartupDir & '\AutoSD.lnk'     ; 启动组快捷方式路径
 	If Not FileExists($config_path) Then DirCreate($config_path)    ; 检测配置文件夹
 	FileInstall('AutoSD.jpg', $config_path & '\AutoSD')            ; 释放 log 图片
 	FileInstall('AutoSD.dll', $config_path & '\AutoSD.dll')       ; 释放 log dll
@@ -201,6 +203,8 @@ Main()
 Func Root_Load()
 	;;; 程序 加载 事件
 	If WinExists('AutoSD by ONE-CCS') Then
+		TraySetState()
+		TrayTip('您已打开一个窗口！', '如遇窗口无法操作，请点击托盘图标！', 10, 1)
 		WinSetState('AutoSD by ONE-CCS', '', @SW_SHOW)
 		WinFlash('AutoSD by ONE-CCS')
 		Exit(0)
@@ -209,6 +213,7 @@ EndFunc
 
 Func Root_Init()
 	;;; 程序 初始化 事件
+	Shortcut(Bool($Setting_Values[1][1]), $Startup_Shortcut)
 	If $Task <> '关机' And $Task <> '重启' And $Task <> '注销' Then $Task = '关机'
 	If $Timer < 10 Then $Timer = 1800
 	Setting_Refresh()
@@ -218,6 +223,7 @@ EndFunc
 Func Root_Close()
 	; 主窗口 关闭按钮 事件
 	Local $root_close
+	Shortcut(Bool($Setting_Values[1][1]), $Startup_Shortcut)
 	If Bool($Setting_Values[5][1]) = True Then
 		GUISetState(@SW_HIDE, $root)
 		Return
@@ -237,6 +243,7 @@ EndFunc
 Func MenuItem_Exit_Click()
 	;;; 托盘菜单 退出 单击事件
 	Local $root_close
+	Shortcut(Bool($Setting_Values[1][1]), $Startup_Shortcut)
 	If Bool($Setting_Values[4][1]) = False Then
 		$root_close = MsgBox(33,'提示', '确定要退出吗？'& @CRLF & @CRLF & 'tip：可在设置中禁用该提示。', 3, $root)
 		If $root_close <> 1 Then Return
@@ -291,9 +298,9 @@ Func Button_Start_Click()
 	$temp_f = Timer_Refresh()
 	$temp_b = GUICtrlRead($Button_Start)
 	
-	If $temp_b = '开始' Or $temp_b = '继续' Then GUICtrlSetData($Label_EndDate, EndDate($Countdown))
 	If $temp_f = 1 And $temp_b = '开始' Then
 		$Countdown = $Timer
+		GUICtrlSetData($Label_EndDate, EndDate($Countdown))
 		$Progress_Value = 100
 		GUICtrlSetData($Progress, $Progress_Value)
 		$temp_timer = 0
@@ -301,6 +308,7 @@ Func Button_Start_Click()
 		GUICtrlSetData($Button_Start, '暂停')
 	ElseIf $temp_b = '继续' Then
 		$Timer_Active = True
+		GUICtrlSetData($Label_EndDate, EndDate($Countdown))
 		GUICtrlSetData($Button_Start, '暂停')
 	ElseIf $temp_b = '暂停' Then
 		$Timer_Active = False

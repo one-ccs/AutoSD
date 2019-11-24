@@ -33,6 +33,18 @@ Func Command(Const $Task)
 	EndSwitch
 EndFunc
 
+Func Shortcut($switch, $path)
+	If $switch = True Then
+		If FileExists($path) <> 1 Then
+			FileCreateShortcut(@ScriptFullPath, $path)
+		EndIf
+	Else
+		If FileExists($path) = 1 Then
+			FileDelete($path)
+		EndIf
+	EndIf
+EndFunc
+
 Func Persent(Const $num1,Const $num2)
 	; 返回 $num1 相对于 $num2 取整的百分比
 	Local $one_persent = $num2 * 0.01
