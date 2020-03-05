@@ -1,2 +1,2 @@
 # AutoSD
-This is a Auto Shutdown application.
+The Auto Shutdown application.
